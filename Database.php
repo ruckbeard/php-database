@@ -152,11 +152,11 @@ class Database {
     
     /**
      * Permits you to write the JOIN portion of your query, can be called multiple times
-     * @param  string $join         The table to be joined
-     * @param  string $join_colums  The columns with matching foreign keys
-     * @param  string [$param = ""] Modifies the type of join statement such as inner, outer, left, right
+     * @param  string $join        The table to be joined
+     * @param  string $join_colums The columns with matching foreign keys
+     * @param  string [$param      = ""] Modifies the type of join statement such as inner, outer, left, right
      * @return object Return database object
-classclass     */
+     */
     public function join($join, $join_colums, $param = "") {
         if (strstr($param == "" ? $param . $this->join : strtoupper($param . " " . $this->join), $param == "" ? $param . "JOIN" : strtoupper($param . " "  . "JOIN")) == false) {
             if (strstr($param == "" ? $param . $join : strtoupper($param . " " . $join), $param == "" ? $param . "JOIN" : strtoupper($param . " "  . "JOIN")) == false) {
