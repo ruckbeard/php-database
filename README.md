@@ -42,11 +42,8 @@ $db = new Database;
 $query = $db->get("table");
 
 This is because the default SELECT portion is SELECT * and the get function accepts 3 parameters. The first being a string that writes the FROM portion if it is not empty.
-
 The get function also produces the same query object that the query function does and is accessed in the same way.
-
 The class can also create other queries such as INSERT, UPDATE, and DELETE queries.
-
 The insert function can be used to create INSERT queries -
 
 $db = new Database;
@@ -85,7 +82,6 @@ $db = new Database;
 $db->set("field_1", "foo");
 $db->set("field_2", "bar");
 $db->set("field_3", "foobar");
-
 $db->insert("table");
 
 The update query can be constructed in almost the exact same way.
@@ -106,7 +102,6 @@ $db = new Database;
 $db->set("field_1", "foo");
 $db->set("field_2", "bar");
 $db->set("field_3", "foobar");
-
 $db->where("id","1");
 $db->update("table");
 
