@@ -256,6 +256,7 @@ $db->limit(10,20);
 $query = $db->get("table");</pre>
 <em>This will create and run the query string "SELECT * FROM table LIMIT 20, 10"</em>
 <h3><strong>Insert</strong></h3>
+<p>The insert function can be used to create and run insert queries. The first parameter it accepts in the table and the second is the data to insert into the query string. The data can be stored in an array or an object. The second parameter is optional. The data can be set by using the set() function.</p>
 <pre>$db = new Database;
 
 $data = array(
@@ -283,9 +284,8 @@ $data = array(
 
 $db->insert("table",$data);</pre>
 <em>This will create and run the query "INSERT INTO table (field_1,field_2,field_3) VALUES ('foo1','bar2','foobar3'),('foo4','bar5','foobar6')</em>
-<p>The insert function can be used to create and run insert queries. The first parameter it accepts in the table and the second is the data to insert into the query string. The data can be stored in an array or an object. The second parameter is optional. The data can be set by using the set() function.</p>
-
 <h3><strong>Update</strong></h3>
+<p>The update function will create and run an UPDATE query. The first paremeter is the table. The second parameter is the data to enter into the query string. The third parameter writes the WHERE portion of the query string. The second and third parameters are optional. The data can be set by using the set() function and the WHERE portion can be set by using the where() function.</p>
 <pre>$data = array(
   field_1 => "foo",
   field_2 => "bar",
@@ -303,7 +303,6 @@ $db->update("table",$data,"id = 1");</pre>
 $db->where("id","1");
 $db->update("table",$data);</pre>
 <em>This will create and run the query string "UPDATE table SET field_1 = 'foo', field_2 = 'bar', field_3 = 'foobar' WHERE id = 1"</em>
-<p>The update function will create and run an UPDATE query. The first paremeter is the table. The second parameter is the data to enter into the query string. The third parameter writes the WHERE portion of the query string. The second and third parameters are optional. The data can be set by using the set() function and the WHERE portion can be set by using the where() function.</p>
 <h3><strong>Set</strong></h3>
 <p>The set function can be used to set the data of an INSERT or UPDATE query string. It can be called multiple times to set multiple fields with data.</p>
 <pre>$db = new Database;
@@ -322,7 +321,7 @@ $db->where("id","1");
 $db->update("table");</pre>
 
 <h3><strong>Delete</strong></h3>
-
+<p>The delete function can be called to create and run a DELETE query string. The first and second parameters are optional. The first parameter is the table to delete from and the second parameter writes the WHERE portion of the query string. These can also be set by using the from() and where() functions.</p>
 <pre>$db = new Database;
 
 $db->from("table")->where("id","1");
@@ -334,4 +333,4 @@ or
 
 $db->delete("table", "id = 1");</pre>
 
-<p>The delete function can be called to create and run a DELETE query string. The first and second parameters are optional. The first parameter is the table to delete from and the second parameter writes the WHERE portion of the query string. These can also be set by using the from() and where() functions.</p>
+
