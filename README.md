@@ -227,6 +227,55 @@ $query = $db->get();</pre>
 $db->distinct();
 $query = $db->get("table");</pre>
 <em>This will create and run the query string "SELECT DISTINCT * FROM table"</em>
+<h4><strong>having</strong></h4>
+<p>The having function will write the HAVING portion of the query string. The function accepts three parameters. The first parameter can be written three different ways. It can be just the field, or the field and an operator. It can also be the field, operator, and data to find in the field. The second parameter is optional and should be set if the first parameter is set as just the field with optional operator. The second parameter is the data to search the field for. The third option can be set the operator if it hasn't been set in the first parameter. The default of the third parameter is "=". The first parameter can also be an array to chain with AND. The function can also be called multiple times to chain with AND.</p>
+<pre>$db = new Database;
+
+$db->select("*");
+$db->from("table");
+$db->having("id = 1");
+$query = $db->get();</pre>
+<em>This will create and run the query string  "SELECT * FROM table HAVING id = '1'".</em>
+<pre>$db = new Database;
+
+$db->select("*");
+$db->from("table");
+$db->having("id =", "1");
+$query = $db->get();</pre>
+<em>This will create and run the query string  "SELECT * FROM table HAVING id = '1'".</em>
+<pre>$db = new Database;
+
+$db->select("*");
+$db->from("table");
+$db->having("id", "1");
+$query = $db->get();</pre>
+<em>This will create and run the query string  "SELECT * FROM table HAVING id = '1'".</em>
+<pre>$db = new Database;
+
+$db->select("*");
+$db->from("table");
+$db->having("id","1","=");
+$query = $db->get();</pre>
+<em>This will create and run the query string  "SELECT * FROM table HAVING id = '1'".</em>
+<pre>$db = new Database;
+
+$db->select("*");
+$db->from("table");
+$db->having("id", "1");
+$db->having("name", "bob");
+$query = $db->get();</pre>
+<em>This will create and run the query string  "SELECT * FROM table HAVING id = '1' AND name = 'bob'".</em>
+<h4><strong>having_or</strong></h4>
+<p>The having_or function will write the HAVING portion of the query string. The function accepts three parameters. The first parameter can be written three different ways. It can be just the field, or the field and an operator. It can also be the field, operator, and data to find in the field. The second parameter is optional and should be set if the first parameter is set as just the field with optional operator. The second parameter is the data to search the field for. The third option can be set the operator if it hasn't been set in the first parameter. The default of the third parameter is "=". The first parameter can also be an array to chain with OR. The function can also be called multiple times to chain with OR.</p>
+<pre>$db = new Database;
+
+$db->select("*");
+$db->from("table");
+$db->having("id", "1");
+$db->having("name", "bob");
+$db->having_or("name", "ted");
+$query = $db->get();</pre>
+<em>This will create and run the query string  "SELECT * FROM table HAVING id = '1' AND name = 'bob' OR name = 'ted'".</em>
 <h4><strong>order_by</strong></h4>
 <p>The order_by function will allow you to write the ORDER BY portion of the query. This function accepts two parameters. The first is the field to order by. The second is the direction of the result, which are asc, desc, or random. The function can be called multiple times for multiple fields.</p>
 <pre>$db = new Database;
