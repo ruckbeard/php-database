@@ -17,11 +17,6 @@ $query = $db->get("table");</pre>
 
 <pre>$db = new Database;
 
-$query = $db->get("table", 10, 0);</pre>
-<em>This will create a query "SELECT * FROM table LIMIT 0, 10" and run it on the database</em>
-
-<pre>$db = new Database;
-
 $db->select("*")->from("table")->where("id","5","=");
 $query = $db->get();</pre>
 <em>This will create a query "SELECT * FROM table WHERE id = 5" and run it on the database</em>
