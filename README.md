@@ -1,16 +1,15 @@
 # php-database
 <p>A class for PHP that can be used to connect to a MySQL database, construct queries, and run queries. Similar to CodeIgniter's database class.</p>
 
-<h2><strong>Example:</strong></h2>
-<h3><strong>The Query Function</strong></h3>
-
+<h3><strong>Query Functions</strong></h3>
+<h4><strong>query</strong></h4>
+<p>This will run a simple query on the database that will return a query object that can be used to obtain the results if it returns any rows.</p>
 <pre>$db = new Database;
 
 $query = $db->query("SELECT * FROM table");</pre>
 
-<p>This will run a simple query on the database that will return a query object that can be used to obtain the results if it returns any rows.</p>
-
-<h3><strong>The Get Function</strong></h3>
+<h4><strong>get</strong></h4>
+<p>The get function has three paremeters. The first parameter is the table to put in the FROM portion of the query. The second is the number of rows to limit the query by. The third is the offset of LIMIT portion. The get function can also be used run queries constructed by the query constructor functions as can be seen abover in the third example.</p>
 <pre>$db = new Database;
 
 $query = $db->get("table");</pre>
@@ -27,11 +26,9 @@ $db->from("table");
 $query = $db->get();</pre>
 <em>This will create a query "SELECT * FROM table" and run it on the database</em>
 
-<p>The get function has three paremeters. The first parameter is the table to put in the FROM portion of the query. The second is the number of rows to limit the query by. The third is the offset of LIMIT portion. The get function can also be used run queries constructed by the query constructor functions as can be seen abover in the third example.</p>
-
 <h3><strong>The Query Result</strong></h3>
 <p>The query result object contains the results of the query that was run on the database. It is accessed as an object</p>
-<h4><strong>Result</strong></h4>
+<h4><strong>result</strong></h4>
 <p>The result function returns all of the results from the query. All of the results can be accessed by usings a foreach loop.</p>
 <pre>$db = new Database;
 
@@ -53,7 +50,7 @@ foreach ($query->result() as $row) {
   $row->date;
 }</pre>
 
-<h4><strong>Row</strong></h4>
+<h4><strong>row</strong></h4>
 <p>The row function returns a single row from the query results. With no parameters, it will return the first row of the results. You can add a parameter to select which row you want to get.</p>;
 <pre>$db = new Database;
 
