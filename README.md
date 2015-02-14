@@ -68,7 +68,7 @@ $row->id;
 $row->name;
 $row->date;</pre>
 <h3><strong>Query Constructor Functions</strong></h3>
-<p>The query constructor functions are a set of functions that can be called before using the get() function to write seperate portions of the query without having to manually write the query as a string. Information is automatically escaped by using this method.</p>
+<p>The query constructor functions are a set of functions that can be called before using the get() function to write seperate portions of the query without having to manually write the query as a string. Information is automatically escaped by using this method. These functions can be chained together which can simplify the syntax and increase readability.</p>
 <h4><strong>select</strong></h4>
 <p>The select function writes the SELECT portion of the query.</p>
 <pre>$db = new Database;
@@ -252,6 +252,13 @@ $query = $db->get("table");</pre>
 $db->limit(10,20);
 $query = $db->get("table");</pre>
 <em>This will create and run the query string "SELECT * FROM table LIMIT 20, 10"</em>
+<h4><strong>Chaining Constructor Functions</strong></h4>
+<p>The query constructor functions can be chained together to simplify the syntax and increase readability.</p>
+<pre>$db = new Database;
+
+$db->select("*")->from("table")->where("id","1","!=")->order_by("id","asc");
+$query = $db->get();</pre>
+<em>This will create and run the query string "SELECT * FROM table WHERE id != 1 ORDER BY id ASC"</em>
 <h3><strong>Insert</strong></h3>
 <p>The insert function can be used to create and run insert queries. The first parameter it accepts in the table and the second is the data to insert into the query string. The data can be stored in an array or an object. The second parameter is optional. The data can be set by using the set() function.</p>
 <pre>$db = new Database;
