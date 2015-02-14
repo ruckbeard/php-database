@@ -9,7 +9,7 @@
 $query = $db->query("SELECT * FROM table");</pre>
 
 <h4><strong>get</strong></h4>
-<p>The get function has three paremeters. The first parameter is the table to put in the FROM portion of the query. The second is the number of rows to limit the query by. The third is the offset of LIMIT portion. The get function can also be used run queries constructed by the query constructor functions as can be seen abover in the third example.</p>
+<p>The get function accepts one optional parameter which is the table to put in the FROM portion of the query. When this is set, and no query constructor functions are called before it, it runs a basic query that selects all rows in the table. The get function can also be used run queries constructed by the query constructor functions as can be seen in the third example.</p>
 <pre>$db = new Database;
 
 $query = $db->get("table");</pre>
@@ -22,9 +22,9 @@ $query = $db->get("table", 10, 0);</pre>
 
 <pre>$db = new Database;
 
-$db->from("table");
+$db->select("*")->from("table")->where("id","5","=");
 $query = $db->get();</pre>
-<em>This will create a query "SELECT * FROM table" and run it on the database</em>
+<em>This will create a query "SELECT * FROM table WHERE id = 5" and run it on the database</em>
 
 <h3><strong>The Query Result</strong></h3>
 <p>The query result object contains the results of the query that was run on the database. It is accessed as an object</p>
