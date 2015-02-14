@@ -112,7 +112,7 @@ class Database {
     }
     
     public function select_sum($select, $var = "") {
-        return $this->select_x("MAX", $select, $var);
+        return $this->select_x("SUM", $select, $var);
     }
     
     /**
