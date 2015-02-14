@@ -82,62 +82,37 @@ class Database {
     }
     
     /**
-     * Permits you to write the SELECT MAX portion of your query
-     * @param string $select     Can be the full SELECT MAX portion, or just the field
-     * @param string [$var = ""] Optional variable renames resulting field, otherwise is set to field name
+     * Permits you to write the SELECT (MAX, MIN, AVG, SUM) portion of your query
+     * Accessed by calling the respective public function.
+     * @param string $x      Modifies what kind of SELECT is being performed (MAX, MIN, AVG, SUM)
+     * @param string $select Can be the full SELECT (MAX, MIN, AVG, SUM) portion, or just the field
+     * @param string [$var   = ""] Optional variable renames resulting field, otherwise is set to field name
      * @return object Return this object                                                                                               
      */
+    private function select_x($x, $select, $var) {
+        if (strstr($select, "SELECT") == false) {
+            $this->select = "SELECT $x(" . $select . ") as " . $var == "" ? $select : $var;
+        } else {
+            $this->select = $select;
+        }
+        return $this;
+    }
+    
+    
     public function select_max($select, $var = "") {
-        if (strstr($select, "SELECT") == false) {
-            $this->select = "SELECT MAX(" . $select . ") as " . $var == "" ? $select : $var;
-        } else {
-            $this->select = $select;
-        }
-        return $this;
+        return $this->select_x("MAX", $select, $var);
     }
     
-    /**
-     * Permits you to write the SELECT MIN portion of your query
-     * @param string $select     Can be the full SELECT MIN portion, or just the field
-     * @param string [$var = ""] Optional variable renames resulting field, otherwise is set to field name
-     * @return object Return this object
-     */
     public function select_min($select, $var = "") {
-        if (strstr($select, "SELECT") == false) {
-            $this->select = "SELECT MIN(" . $select . ") as " . $var == "" ? $select : $var;
-        } else {
-            $this->select = $select;
-        }
-        return $this;
+        return $this->select_x("MIN", $select, $var);
     }
     
-    /**
-     * Permits you to write the SELECT AVG portion of your query
-     * @param string $select     Can be the full SELECT AVG portion, or just the field
-     * @param string [$var = ""] Optional variable renames resulting field, otherwise is set to field name
-     * @return object Returns this object                                                                                               
-     */
     public function select_avg($select, $var = "") {
-        if (strstr($select, "SELECT") == false) {
-            $this->select = "SELECT AVG(" . $select . ") as " . $var == "" ? $select : $var;
-        } else {
-            $this->select = $select;
-        }
-        return $this;
+        return $this->select_x("AVG", $select, $var);
     }
     
-    /**
-     * Permits you to write the SELECT SUM portion of your query
-     * @param string $select     Can be the full SELECT SUM portion, or just the field
-     * @param string [$var = ""] Optional variable renames resulting field, otherwise is set to field name
-     */
     public function select_sum($select, $var = "") {
-        if (strstr($select, "SELECT") == false) {
-            $this->select = "SELECT SUM(" . $select . ") as " . $var == "" ? $select : $var;
-        } else {
-            $this->select = $select;
-        }
-        return $this;
+        return $this->select_x("MAX", $select, $var);
     }
     
     /**
@@ -175,50 +150,161 @@ class Database {
     }
     
     /**
+     * Combines the logic of the where, or_where, having, and or_having functions into one function.
+     * @param  string $where_or_having Determines whether writing a WHERE or HAVING query string portion.
+     * @param  string $and_or          Determines whether to chain by AND or OR
+     * @param  string $field           The field to search for the value
+     * @param  string $field_value     The value to search for in the field
+     * @param  string $operator        The operator to determine the logic of the search
+     * @param  bool   $backtick        Turn backticks on field name on or off
+     * @return object returns this database object
+     */
+    private function where_or_having($where_or_having, $and_or, $field, $field_value, $operator, $backtick) {
+        if (is_array($field)) {
+            $keys_and_values = array();
+            foreach ($field as $key => $value) {
+                //check if user wrote operator in the key
+                if (preg_match("/[!=<>]/", $key)) {
+                    if ($backtick) {
+                        $keys_and_values[] = "`$key` '" . $this->escape($value) ."'";
+                    } else {
+                        $keys_and_values[] = "$key '" . $this->escape($value) ."'";
+                    }
+                //no operator found in key
+                } else {
+                    if ($backtick) {
+                        $keys_and_values[] = "`$key` $operator '" . $this->escape($value) ."'";
+                    } else {
+                        $keys_and_values[] = "$key $operator '" . $this->escape($value) ."'";
+                    }
+                }
+            }
+            //check if function has been called at least once before. If it was, chain together with AND.
+            if ($where_or_having == "WHERE") {
+                if (strstr($this->where, "$where_or_having") == false)
+                    $this->where = "WHERE " . implode(" $and_or ", $keys_and_values);
+                else
+                    $this->where .= implode(" $and_or ", $keys_and_values);
+            } else if ($where_or_having == "HAVING") {
+                if (strstr($this->having, "$where_or_having") == false)
+                    $this->having = "HAVING " . implode(" $and_or ", $keys_and_values);
+                else
+                    $this->having .= implode(" $and_or ", $keys_and_values);
+            }
+            
+        } else if (is_string($field)) {
+            //Check if user manually wrote the entire HAVING portion in the first parameter
+            if (strstr($field, $where_or_having) == false) {
+                if ($where_or_having == "WHERE") {
+                    //Check if function has already been called. If it has, chain together with OR
+                    if (strstr($this->where, "WHERE") == false) {
+                        if ($field_value != "") {
+                            //Check if user included operator in first parameter
+                            if (preg_match("/[!=<>]/", $field)) {
+                                if ($backtick) {
+                                    $this->where = "WHERE `$field` '" . $this->escape($field_value) ."'";
+                                } else {
+                                    $this->where = "WHERE $field '" . $this->escape($field_value) ."'";
+                                }
+                            //operator not found in first parameter
+                            } else {
+                                if ($backtick == true) {
+                                    $this->where = "WHERE `$field` $operator '" . $this->escape($field_value) ."'";
+                                } else {
+                                    $this->where = "WHERE $field $operator '" . $this->escape($field_value) ."'";
+                                }
+                            }
+                        //user included value and operator in first paremeter
+                        } else {
+                            $this->where = "WHERE $field";
+                        }
+                    //function has been called at least once before
+                    } else {
+                        if ($field_value != "") {
+                            //check if user included operator in first parameter
+                            if (preg_match("/[!=<>]/", $field)) {
+                                if ($backtick) {
+                                    $this->where .= " $and_or `$field` '" . $this->escape($field_value) ."'";
+                                } else {
+                                    $this->where .= " $and_or $field '" . $this->escape($field_value) ."'";
+                                }
+                            //operator found in first parameter
+                            } else {
+                                if ($backtick) {
+                                    $this->where .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
+                                } else {
+                                    $this->where .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
+                                }
+                            }
+                        //user included value and operator in first parameter
+                        } else {
+                            $this->where .= " $and_or $field";
+                        }
+                    }
+                } else if ($where_or_having == "HAVING") {
+                    //Check if function has already been called. If it has, chain together with OR
+                    if (strstr($this->having, "HAVING") == false) {
+                        if ($field_value != "") {
+                            //Check if user included operator in first parameter
+                            if (preg_match("/[!=<>]/", $field)) {
+                                if ($backtick) {
+                                    $this->having = "HAVING `$field` '" . $this->escape($field_value) ."'";
+                                } else {
+                                    $this->having = "HAVING $field '" . $this->escape($field_value) ."'";
+                                }
+                            //operator not found in first parameter
+                            } else {
+                                if ($backtick == true) {
+                                    $this->having = "HAVING `$field` $operator '" . $this->escape($field_value) ."'";
+                                } else {
+                                    $this->having = "HAVING $field $operator '" . $this->escape($field_value) ."'";
+                                }
+                            }
+                        //user included value and operator in first paremeter
+                        } else {
+                            $this->having = "HAVING $field";
+                        }
+                    //function has been called at least once before
+                    } else {
+                        if ($field_value != "") {
+                            //check if user included operator in first parameter
+                            if (preg_match("/[!=<>]/", $field)) {
+                                if ($backtick) {
+                                    $this->having .= " $and_or `$field` '" . $this->escape($field_value) ."'";
+                                } else {
+                                    $this->having .= " $and_or $field '" . $this->escape($field_value) ."'";
+                                }
+                            //operator found in first parameter
+                            } else {
+                                if ($backtick) {
+                                    $this->having .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
+                                } else {
+                                    $this->having .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
+                                }
+                            }
+                        //user included value and operator in first parameter
+                        } else {
+                            $this->having .= " $and_or $field";
+                        }
+                    }
+                }
+                
+            //user manually wrote entire HAVING portion in first parameter, so set having exactly to user's input
+            } else {
+                $where_or_having == "WHERE" ? $this->where = $field : $this->having = $field;
+            }
+        }
+        return $this;
+    }
+    
+    /**
      * Permits you to write the WHERE portion of your query. Can be called multiple times to combine
      * WHERE statements with AND.
      * @param array||string $where Can be an associative array, or a string.
      * @return object Returns this object
      */
-    public function where($where, $where_value = "", $operator = "=") {
-        if (is_array($where)) {
-            $keys_and_values = array();
-            foreach ($where as $key => $value) {
-                if (preg_match("/[!=<>]/", $key))
-                    $keys_and_values[] = $key . " '" . $this->escape($value) ."'";
-                else
-                    $keys_and_values[] = $key . " $operator '" . $this->escape($value) ."'";
-            }
-            if (strstr($this->where, "WHERE") == false)
-                $this->where = "WHERE " . implode(" AND ", $keys_and_values);
-            else
-                $this->where .= implode(" AND ", $keys_and_values);
-        } else if (is_string($where)) {
-            if (strstr($where, "WHERE") == false) {
-                if (strstr($this->where, "WHERE") == false) {
-                    if ($where_value != "") {
-                        if (preg_match("/[!=<>]/", $where))
-                            $this->where = "WHERE $where '" . $this->escape($where_value) . "'";
-                        else
-                            $this->where = "WHERE $where $operator '" . $this->escape($where_value) . "'";
-                    } else {
-                        $this->where = "WHERE $where";
-                    }
-                } else {
-                    if ($where_value != "") {
-                        if (preg_match("/[!=<>]/", $where))
-                            $this->where = " AND $where '" . $this->escape($where_value) . "'";
-                        else
-                            $this->where = " AND $where $operator '" . $this->escape($where_value) . "'";
-                    } else {
-                        $this->where = " AND $where";
-                    }
-                }
-            } else {
-                $this->where = $where;
-            }
-        }
-        return $this;
+    public function where($where, $where_value = "", $operator = "=",$backtick = true) {
+        return $this->where_or_having("WHERE","AND",$where,$where_value,$operator,$backtick);
     }
     
     /**
@@ -227,45 +313,8 @@ class Database {
      * @param array||string $where Can be an associative array, or a string.
      * @return object Returns this object;                                                              
      */
-    public function or_where($where, $where_value = "", $operator = "=") {
-        if (is_array($where)) {
-            $keys_and_values = array();
-            foreach ($where as $key => $value) {
-                if (preg_match("/[!=<>]/", $key))
-                    $keys_and_values[] = $key . " '" . $this->escape($value) ."'";
-                else
-                    $keys_and_values[] = $key . " $operator '" . $this->escape($value) ."'";
-            }
-            if (strstr($this->where, "WHERE") == false)
-                $this->where = "WHERE " . implode(" OR ", $keys_and_values);
-            else
-                $this->where .= implode(" OR ", $keys_and_values);
-        } else if (is_string($where)) {
-            if (strstr($where, "WHERE") == false) {
-                if (strstr($this->where, "WHERE") == false) {
-                    if ($where_value != "") {
-                        if (preg_match("/[!=<>]/", $where))
-                            $this->where = "WHERE $where '" . $this->escape($where_value) . "'";
-                        else
-                            $this->where = "WHERE $where $operator '" . $this->escape($where_value) . "'";
-                    } else {
-                        $this->where = "WHERE $where";
-                    }
-                } else {
-                    if ($where_value != "") {
-                        if (preg_match("/[!=<>]/", $where))
-                            $this->where = " OR $where '" . $this->escape($where_value) . "'";
-                        else
-                            $this->where = " OR $where $operator '" . $this->escape($where_value) . "'";
-                    } else {
-                        $this->where = " OR $where";
-                    }
-                }
-            } else {
-                $this->where = $where;
-            }
-        }
-        return $this;
+    public function or_where($where, $where_value = "", $operator = "=", $backtick = true) {
+        return $this->where_or_having("WHERE", "OR", $where, $where_value, $operator, $backtick);
     }
     
     /**
@@ -306,45 +355,8 @@ class Database {
      * @param array||string $having Can be an associative array, or a string.
      * @return object Returns this object;                                                              
      */
-    public function having($having, $having_value = "", $operator = "=") {
-        if (is_array($having)) {
-            $keys_and_values = array();
-            foreach ($having as $key => $value) {
-                if (preg_match("/[!=<>]/", $key))
-                    $keys_and_values[] = $key . " '" . $this->escape($value) ."'";
-                else
-                    $keys_and_values[] = $key . " $operator '" . $this->escape($value) ."'";
-            }
-            if (strstr($this->having, "HAVING") == false)
-                $this->having = "HAVING " . implode(" AND ", $keys_and_values);
-            else
-                $this->having .= implode(" AND ", $keys_and_values);
-        } else if (is_string($having)) {
-            if (strstr($having, "HAVING") == false) {
-                if (strstr($this->having, "HAVING") == false) {
-                    if ($having_value != "") {
-                        if (preg_match("/[!=<>]/", $having))
-                            $this->having = "HAVING $having '" . $this->escape($having_value) ."'";
-                        else
-                            $this->having = "HAVING $having $operator '" . $this->escape($having_value) ."'";
-                    } else {
-                        $this->having = "HAVING $having";
-                    }
-                } else {
-                    if ($having_value != "") {
-                        if (preg_match("/[!=<>]/", $having))
-                            $this->having = " AND $having '" . $this->escape($having_value) ."'";
-                        else
-                            $this->having = " AND $having $operator '" . $this->escape($having_value) ."'";
-                    } else {
-                        $this->having = " AND $having";
-                    }
-                }
-            } else {
-                $this->having = $having;
-            }
-        }
-        return $this;
+    public function having($having, $having_value = "", $operator = "=", $backtick = true) {
+        return $this->where_or_having("HAVING","AND",$having,$having_value,$operator,$backtick);
     }
     
     /**
@@ -353,46 +365,8 @@ class Database {
      * @param array||string $having Can be an associative array containing 
      * @return object Returns this object;                                                              
      */
-    public function having_or($having, $having_value = "", $operaotr = "=") {
-        if (is_array($having)) {
-            $keys_and_values = array();
-            foreach ($having as $key => $value) {
-                if (preg_match("/[!=<>]/", $key))
-                    $keys_and_values[] = $key . " '" . $this->escape($value) ."'";
-                else
-                    $keys_and_values[] = $key . " $operator '" . $this->escape($value) ."'";
-            }
-            if (strstr($this->having, "HAVING") == false)
-                $this->having = "HAVING " . implode(" AND ", $keys_and_values);
-            else
-                $this->having .= implode(" OR ", $keys_and_values);
-        } else if (is_string($having)) {
-            if (strstr($having, "HAVING") == false) {
-                if (strstr($this->having, "HAVING") == false) {
-                    if ($having_value != "") {
-                        if (preg_match("/[!=<>]/", $having))
-                            $this->having = "HAVING $having '" . $this->escape($having_value) ."'";
-                        else
-                            $this->having = "HAVING $having $operator '" . $this->escape($having_value) ."'";
-                    } else {
-                        $this->having = "HAVING $having";
-                    }
-                } else {
-                    if ($having_value != "") {
-                        if (preg_match("/[!=<>]/", $having))
-                            $this->having = " OR $having '" . $this->escape($having_value) ."'";
-                        else
-                            $this->having = " OR $having $operator '" . $this->escape($having_value) ."'";
-                    } else {
-                        $this->having = " OR $having";
-                    }
-                }
-
-            } else {
-                $this->having = $having;
-            }
-        }
-        return $this;
+    public function or_having($having, $having_value = "", $operator = "=", $backtick = true) {
+        return $this->where_or_having("HAVING","OR",$having,$having_value,$operator,$backtick);
     }
     
     /**
@@ -437,44 +411,11 @@ class Database {
      * Runs a query that has been modified by the query creation functions, or by the parameters
      * of this function
      * @param  string [$table_name = ""] The table name to run on the query on, if left empty, it will be taken from the from function
-     * @param  string [$limit = -1]      Adds a limit to the query, can be set by the limit function
-     * @param  string [$offset = -1]     Adds an offset to the query's limit. can be set by the limit function
      * @return object Returns a query object created by the query function
      */
-    public function get($table_name = "", $limit = -1, $offset = -1) {
+    public function get($table_name = "") {
         if ($table_name != "")
             $this->from($table_name);
-        if ($limit != -1)
-            $this->limit($limit, $offset);
-        $query = "$this->select FROM $this->from $this->join $this->where $this->group_by $this->having $this->order_by $this->limit";
-        $this->select = "SELECT *";
-        $this->from = "";
-        $this->join = "";
-        $this->where = "";
-        $this->group_by = "";
-        $this->having = "";
-        $this->order_by = "";
-        $this->limit = "";
-        return $this->query(trim($query));
-    }
-    
-    /**
-     * Queries the database to get all fields from a table or specific row. Can also be 
-     * limited and offset.
-     * @param  string $table_name = ""  The table name to select from
-     * @param  string [$where = ""]  Adds a where statement to the query
-     * @param  integer [$offset = -1] Adds an offset to the query
-     * @param  integer [$limit = -1]  Adds a limit to the query
-     * @return object  if num_rows on the query result returns greater than 0, return
-     *                  an object that contains the results of the query, else return false                                                     
-     */
-    public function get_where($table_name = "", $where = "", $limit = -1, $offset = -1) {
-        if ($table_name != "")
-            $this->from($table_name);
-        if ($where != "")
-            $this->where($where);
-        if ($limit != -1)
-            $this->limit($limit, $offset);
         $query = "$this->select FROM $this->from $this->join $this->where $this->group_by $this->having $this->order_by $this->limit";
         $this->select = "SELECT *";
         $this->from = "";
@@ -574,24 +515,6 @@ class Database {
         }
     }
     
-    /*public function insert_string($table_name, $data) {
-        $keys = array();
-        $values = array();
-        foreach ($data as $key => $value) {
-            $keys[] = $key;
-            $values[] = $value;
-        }
-        $query = "INSERT INTO $table_name ('{".implode("}','{",$keys)."}') VALUES (".implode(",",$values).")";
-        $insert_row = $this->link->query($query) or die($this->link->error.__LINE__);
-        $this->last_query = $query;
-        if ($insert_row) {
-            header("Location: index.php?msg=" . urlencode('Record Added'));
-            exit();
-        } else {
-            die('Error: (' . $this->link->errorno . ') ' . $this->link->error);
-        }
-    }*/
-    
     /**
      * Runs and UPDATE query that can be modified by the set function and from function
      * @param string $table        The table to run the update query on
@@ -615,25 +538,6 @@ class Database {
             die('Error: (' . $this->link->errorno . ') ' . $this->link->error);
         }
     }
-    
-    /*public function update_string($table_name, $data, $where="") {
-        $keys_and_values = array();
-        foreach ($data as $key => $value) {
-            $keys_and_values[] = $key . " = '" . $value ."'";
-        }
-        if ($where != "")
-            $this->where($where);
-        $query = "UPDATE $table_name SET ('{".implode("}', '{",$keys_and_values)."}') $this->where";
-        $insert_row = $this->link->query($query) or die($this->link->error.__LINE__);
-        $this->last_query = $query;
-        $this->where = "";
-        if ($insert_row) {
-            header("Location: index.php?msg=" . urlencode('Record Updated'));
-            exit();
-        } else {
-            die('Error: (' . $this->link->errorno . ') ' . $this->link->error);
-        }
-    }*/
     
     /**
      * Runs a DELETE query that can be modified by the from function and the where function
