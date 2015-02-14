@@ -70,7 +70,7 @@ $row = $query->row(5);
 $row->id;
 $row->name;
 $row->date;</pre>
-<h3><strong>Query Construcor Functions</strong></h3>
+<h3><strong>Query Constructor Functions</strong></h3>
 <p>The query constructor functions are a set of functions that can be called before using the get() function to write seperate portions of the query without having to manually write the query as a string. Information is automatically escaped by using this method.</p>
 <h4><strong>select</strong></h4>
 <p>The select function writes the SELECT portion of the query.</p>
