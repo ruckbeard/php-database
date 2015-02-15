@@ -9,17 +9,16 @@ class Database {
     public $error;
     
     private $last_query = "";
-    private $query = "";
-    private $select = "SELECT *";
-    private $from = "";
-    private $join = "";
-    private $where = "";
-    private $where_having = array("WHERE" => "", "HAVING" => "");
-    private $group_by = "";
-    private $distinct = "";
-    private $having = "";
-    private $order_by = "";
-    private $limit = "";
+    private $query_string = array(
+        "SELECT" => "SELECT *", 
+        "FROM" => "", 
+        "JOIN" => "", 
+        "WHERE" => "",
+        "GROUP BY" => "",
+        "HAVING" => "",
+        "ORDER BY" => "",
+        "LIMIT" => ""
+    );
     
     private $set_insert = "";
     private $set_update = "";
@@ -75,9 +74,9 @@ class Database {
      */
     public function select($select) {
         if (strstr($select, "SELECT") == false) {
-            $this->select = "SELECT " . $select;
+            $this->query_string["SELECT"] = "SELECT " . $select;
         } else {
-            $this->select = $select;
+            $this->query_string["SELECT"] = $select;
         }
         return $this;
     }
@@ -92,9 +91,9 @@ class Database {
      */
     private function select_x($x, $select, $var) {
         if (strstr($select, "SELECT") == false) {
-            $this->select = "SELECT $x(" . $select . ") as " . $var == "" ? $select : $var;
+            $this->query_string["SELECT"] = "SELECT $x(" . $select . ") as " . $var == "" ? $select : $var;
         } else {
-            $this->select = $select;
+            $this->query_string["SELECT"] = $select;
         }
         return $this;
     }
@@ -122,7 +121,7 @@ class Database {
      * @return object Return this object
      */
     public function from($from) {
-        $this->from = $from;
+        $this->query_string["FROM"] = $from;
         return $this;
     }
     
@@ -134,17 +133,17 @@ class Database {
      * @return object Return database object
      */
     public function join($join, $join_colums, $param = "") {
-        if (strstr($param == "" ? $param . $this->join : strtoupper($param . " " . $this->join), $param == "" ? $param . "JOIN" : strtoupper($param . " "  . "JOIN")) == false) {
-            if (strstr($param == "" ? $param . $join : strtoupper($param . " " . $join), $param == "" ? $param . "JOIN" : strtoupper($param . " "  . "JOIN")) == false) {
-                $this->join = $param == "" ? $param . "JOIN " . $join . " ON " . $join_colums : strtoupper($param . " ") . "JOIN " . $join . " ON " . $join_colums;
+        if (strstr($param == "" ? $param . $this->query_string["JOIN"] : strtoupper($param) . " " . $this->query_string["JOIN"], $param == "" ? $param . "JOIN" : strtoupper($param) . " "  . "JOIN") == false) {
+            if (strstr($param == "" ? $param . $join : strtoupper($param) . " " . $join, $param == "" ? $param . "JOIN" : strtoupper($param) . " "  . "JOIN") == false) {
+                $this->query_string["JOIN"] = $param == "" ? $param . "JOIN " . $join . " ON " . $join_colums : strtoupper($param) . " " . "JOIN " . $join . " ON " . $join_colums;
             } else {
-                $this->join = $join;
+                $this->query_string["JOIN"] = $join;
             }
         } else {
-            if (strstr($param == "" ? $param . $join : strtoupper($param . " " . $join), $param == "" ? $param . "JOIN" : strtoupper($param . " "  . "JOIN")) == false) {
-                $this->join .= " " . $param == "" ? $param . "JOIN " . $join . " ON " . $join_colums : strtoupper($param . " ") . "JOIN " . $join . " ON " . $join_colums;
+            if (strstr($param == "" ? $param . $join : strtoupper($param) . " " . $join, $param == "" ? $param . "JOIN" : strtoupper($param) . " "  . "JOIN") == false) {
+                $this->query_string["JOIN"] .= " " . $param == "" ? $param . "JOIN " . $join . " ON " . $join_colums : strtoupper($param) . " " . "JOIN " . $join . " ON " . $join_colums;
             } else {
-                $this->join .= " " . $join;
+                $this->query_string["JOIN"] .= " " . $join;
             }
         }
         return $this;
@@ -181,36 +180,36 @@ class Database {
                 }
             }
             //check if function has been called at least once before. If it was, chain together with AND.
-            if (strstr($this->where_having[$where_or_having], "$where_or_having") == false)
-                $this->where_having[$where_or_having] = "$where_or_having " . implode(" $and_or ", $keys_and_values);
+            if (strstr($this->query_string[$where_or_having], "$where_or_having") == false)
+                $this->query_string[$where_or_having] = "$where_or_having " . implode(" $and_or ", $keys_and_values);
             else
-                $this->where_having[$where_or_having] .= implode(" $and_or ", $keys_and_values);
+                $this->query_string[$where_or_having] .= implode(" $and_or ", $keys_and_values);
             
         } else if (is_string($field)) {
             //Check if user manually wrote the entire HAVING portion in the first parameter
             if (strstr($field, $where_or_having) == false) {
                 if ($where_or_having == "$where_or_having") {
                     //Check if function has already been called. If it has, chain together with OR
-                    if (strstr($this->where_having[$where_or_having], "$where_or_having") == false) {
+                    if (strstr($this->query_string[$where_or_having], "$where_or_having") == false) {
                         if ($field_value != "") {
                             //Check if user included operator in first parameter
                             if (preg_match("/[!=<>]/", $field)) {
                                 if ($backtick) {
-                                    $this->where_having[$where_or_having] = "$where_or_having `$field` '" . $this->escape($field_value) ."'";
+                                    $this->query_string[$where_or_having] = "$where_or_having `$field` '" . $this->escape($field_value) ."'";
                                 } else {
-                                    $this->where_having[$where_or_having] = "$where_or_having $field '" . $this->escape($field_value) ."'";
+                                    $this->query_string[$where_or_having] = "$where_or_having $field '" . $this->escape($field_value) ."'";
                                 }
                             //operator not found in first parameter
                             } else {
                                 if ($backtick == true) {
-                                    $this->where_having[$where_or_having] = "$where_or_having `$field` $operator '" . $this->escape($field_value) ."'";
+                                    $this->query_string[$where_or_having] = "$where_or_having `$field` $operator '" . $this->escape($field_value) ."'";
                                 } else {
-                                    $this->where_having[$where_or_having] = "$where_or_having $field $operator '" . $this->escape($field_value) ."'";
+                                    $this->query_string[$where_or_having] = "$where_or_having $field $operator '" . $this->escape($field_value) ."'";
                                 }
                             }
                         //user included value and operator in first paremeter
                         } else {
-                            $this->where_having[$where_or_having] = "$where_or_having $field";
+                            $this->query_string[$where_or_having] = "$where_or_having $field";
                         }
                     //function has been called at least once before
                     } else {
@@ -218,27 +217,27 @@ class Database {
                             //check if user included operator in first parameter
                             if (preg_match("/[!=<>]/", $field)) {
                                 if ($backtick) {
-                                    $this->where_having[$where_or_having] .= " $and_or `$field` '" . $this->escape($field_value) ."'";
+                                    $this->query_string[$where_or_having] .= " $and_or `$field` '" . $this->escape($field_value) ."'";
                                 } else {
-                                    $this->where_having[$where_or_having] .= " $and_or $field '" . $this->escape($field_value) ."'";
+                                    $this->query_string[$where_or_having] .= " $and_or $field '" . $this->escape($field_value) ."'";
                                 }
                             //operator found in first parameter
                             } else {
                                 if ($backtick) {
-                                    $this->where_having[$where_or_having] .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
+                                    $this->query_string[$where_or_having] .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
                                 } else {
-                                    $this->where_having[$where_or_having] .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
+                                    $this->query_string[$where_or_having] .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
                                 }
                             }
                         //user included value and operator in first parameter
                         } else {
-                            $this->where_having[$where_or_having] .= " $and_or $field";
+                            $this->query_string[$where_or_having] .= " $and_or $field";
                         }
                     }
                 } 
             //user manually wrote entire HAVING portion in first parameter, so set having exactly to user's input
             } else {
-                $this->where_having[$where_or_having] = $field;
+                $this->query_string[$where_or_having] = $field;
             }
         }
         return $this;
@@ -271,12 +270,12 @@ class Database {
      */
     public function group_by($group_by) {
         if (is_array($group_by)) {
-            $this->group_by = "GROUP BY " . implode(", ", $group_by);
+            $this->query_string["GROUP BY"] = "GROUP BY " . implode(", ", $group_by);
         } else if (is_string($group_by)) {
             if (strstr($group_by, "GROUP BY") == false) {
-                $this->group_by = "GROUP BY " . $group_by;
+                $this->query_string["GROUP BY"] = "GROUP BY " . $group_by;
             } else {
-                $this->group_by = $group_by;
+                $this->query_string["GROUP BY"] = $group_by;
             }
         }
         return $this;
@@ -287,11 +286,11 @@ class Database {
      * @return object Returns this database object
      */
     public function distinct() {
-        if ($this->select == "SELECT *")
-            $this->select = "SELECT DISTINCT *";
+        if ($this->query_string["SELECT"] == "SELECT *")
+            $this->query_string["SELECT"] = "SELECT DISTINCT *";
         else {
-            $select_fields = strstr($this->select, "SELECT ");
-            $this->select = "SELECT DISTINCT $select_fields";
+            $select_fields = strstr($this->query_string["SELECT"], "SELECT ");
+            $this->query_string["SELECT"] = "SELECT DISTINCT $select_fields";
         }
         return $this;
     }
@@ -323,17 +322,17 @@ class Database {
      * @return object Returns this database object
      */
     public function order_by($order_by, $order) {
-        if (strstr($this->order_by, "ORDER BY") == false) {
+        if (strstr($this->query_string["ORDER BY"], "ORDER BY") == false) {
             if (strstr($order_by, "ORDER BY") == false) {
-                $this->order_by = "ORDER BY " . $order_by . " " . strtoupper($order);
+                $this->query_string["ORDER BY"] = "ORDER BY " . $order_by . " " . strtoupper($order);
             } else {
-                $this->order_by = $order_by;
+                $this->query_string["ORDER BY"] = $order_by;
             }
         } else {
             if (strstr($order_by, "ORDER BY") == false) {
-                $this->order_by .= ", " . $order_by . " " . strtoupper($order);
+                $this->query_string["ORDER BY"] .= ", " . $order_by . " " . strtoupper($order);
             } else {
-                $this->order_by .= ", " . $order_by;
+                $this->query_string["ORDER BY"] .= ", " . $order_by;
             }
         }
         return $this;
@@ -347,9 +346,9 @@ class Database {
      */
     public function limit($limit, $offset = -1) {
         if (strstr($limit, "LIMIT") == false) {
-            $this->limit = "LIMIT " . $offset != -1 ? $offset . ", " . $limit : $limit;
+            $this->query_string["LIMIT"] = "LIMIT " . $offset != -1 ? $offset . ", " . $limit : $limit;
         } else {
-            $this->limit = $limit;
+            $this->query_string["LIMIT"] = $limit;
         }
         return $this;
     }
@@ -363,15 +362,24 @@ class Database {
     public function get($table_name = "") {
         if ($table_name != "")
             $this->from($table_name);
-        $query = "$this->select FROM $this->from $this->join ".$this->where_having['WHERE']." $this->group_by ".$this->where_having['HAVING']." $this->order_by $this->limit";
-        $this->select = "SELECT *";
-        $this->from = "";
-        $this->join = "";
-        $this->where_having['WHERE'] = "";
-        $this->group_by = "";
-        $this->where_having['HAVING'] = "";
-        $this->order_by = "";
-        $this->limit = "";
+        $query = $this->query_string['SELECT'] . " FROM " . 
+                 $this->query_string['FROM'] . " " . 
+                 $this->query_string['JOIN'] . " " . 
+                 $this->query_string['WHERE'] . " " .
+                 $this->query_string['GROUP BY'] . " " . 
+                 $this->query_string['HAVING'] . " " . 
+                 $this->query_string['ORDER BY'] . " " . 
+                 $this->query_string['LIMIT'];
+        $this->query_string = array(
+            "SELECT" => "SELECT *",
+            "FROM" => "",
+            "JOIN" => "",
+            "WHERE" => "",
+            "GROUP BY" => "",
+            "HAVING" => "",
+            "ORDER BY" => "",
+            "LIMIT" => ""
+        );
         return $this->query(trim($query));
     }
     
