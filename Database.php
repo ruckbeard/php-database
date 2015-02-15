@@ -14,6 +14,7 @@ class Database {
     private $from = "";
     private $join = "";
     private $where = "";
+    private $where_having = array("WHERE" => "", "HAVING" => "");
     private $group_by = "";
     private $distinct = "";
     private $having = "";
@@ -180,43 +181,36 @@ class Database {
                 }
             }
             //check if function has been called at least once before. If it was, chain together with AND.
-            if ($where_or_having == "WHERE") {
-                if (strstr($this->where, "$where_or_having") == false)
-                    $this->where = "WHERE " . implode(" $and_or ", $keys_and_values);
-                else
-                    $this->where .= implode(" $and_or ", $keys_and_values);
-            } else if ($where_or_having == "HAVING") {
-                if (strstr($this->having, "$where_or_having") == false)
-                    $this->having = "HAVING " . implode(" $and_or ", $keys_and_values);
-                else
-                    $this->having .= implode(" $and_or ", $keys_and_values);
-            }
+            if (strstr($this->where_having[$where_or_having], "$where_or_having") == false)
+                $this->where_having[$where_or_having] = "$where_or_having " . implode(" $and_or ", $keys_and_values);
+            else
+                $this->where_having[$where_or_having] .= implode(" $and_or ", $keys_and_values);
             
         } else if (is_string($field)) {
             //Check if user manually wrote the entire HAVING portion in the first parameter
             if (strstr($field, $where_or_having) == false) {
-                if ($where_or_having == "WHERE") {
+                if ($where_or_having == "$where_or_having") {
                     //Check if function has already been called. If it has, chain together with OR
-                    if (strstr($this->where, "WHERE") == false) {
+                    if (strstr($this->where_having[$where_or_having], "$where_or_having") == false) {
                         if ($field_value != "") {
                             //Check if user included operator in first parameter
                             if (preg_match("/[!=<>]/", $field)) {
                                 if ($backtick) {
-                                    $this->where = "WHERE `$field` '" . $this->escape($field_value) ."'";
+                                    $this->where_having[$where_or_having] = "$where_or_having `$field` '" . $this->escape($field_value) ."'";
                                 } else {
-                                    $this->where = "WHERE $field '" . $this->escape($field_value) ."'";
+                                    $this->where_having[$where_or_having] = "$where_or_having $field '" . $this->escape($field_value) ."'";
                                 }
                             //operator not found in first parameter
                             } else {
                                 if ($backtick == true) {
-                                    $this->where = "WHERE `$field` $operator '" . $this->escape($field_value) ."'";
+                                    $this->where_having[$where_or_having] = "$where_or_having `$field` $operator '" . $this->escape($field_value) ."'";
                                 } else {
-                                    $this->where = "WHERE $field $operator '" . $this->escape($field_value) ."'";
+                                    $this->where_having[$where_or_having] = "$where_or_having $field $operator '" . $this->escape($field_value) ."'";
                                 }
                             }
                         //user included value and operator in first paremeter
                         } else {
-                            $this->where = "WHERE $field";
+                            $this->where_having[$where_or_having] = "$where_or_having $field";
                         }
                     //function has been called at least once before
                     } else {
@@ -224,74 +218,27 @@ class Database {
                             //check if user included operator in first parameter
                             if (preg_match("/[!=<>]/", $field)) {
                                 if ($backtick) {
-                                    $this->where .= " $and_or `$field` '" . $this->escape($field_value) ."'";
+                                    $this->where_having[$where_or_having] .= " $and_or `$field` '" . $this->escape($field_value) ."'";
                                 } else {
-                                    $this->where .= " $and_or $field '" . $this->escape($field_value) ."'";
+                                    $this->where_having[$where_or_having] .= " $and_or $field '" . $this->escape($field_value) ."'";
                                 }
                             //operator found in first parameter
                             } else {
                                 if ($backtick) {
-                                    $this->where .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
+                                    $this->where_having[$where_or_having] .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
                                 } else {
-                                    $this->where .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
+                                    $this->where_having[$where_or_having] .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
                                 }
                             }
                         //user included value and operator in first parameter
                         } else {
-                            $this->where .= " $and_or $field";
+                            $this->where_having[$where_or_having] .= " $and_or $field";
                         }
                     }
-                } else if ($where_or_having == "HAVING") {
-                    //Check if function has already been called. If it has, chain together with OR
-                    if (strstr($this->having, "HAVING") == false) {
-                        if ($field_value != "") {
-                            //Check if user included operator in first parameter
-                            if (preg_match("/[!=<>]/", $field)) {
-                                if ($backtick) {
-                                    $this->having = "HAVING `$field` '" . $this->escape($field_value) ."'";
-                                } else {
-                                    $this->having = "HAVING $field '" . $this->escape($field_value) ."'";
-                                }
-                            //operator not found in first parameter
-                            } else {
-                                if ($backtick == true) {
-                                    $this->having = "HAVING `$field` $operator '" . $this->escape($field_value) ."'";
-                                } else {
-                                    $this->having = "HAVING $field $operator '" . $this->escape($field_value) ."'";
-                                }
-                            }
-                        //user included value and operator in first paremeter
-                        } else {
-                            $this->having = "HAVING $field";
-                        }
-                    //function has been called at least once before
-                    } else {
-                        if ($field_value != "") {
-                            //check if user included operator in first parameter
-                            if (preg_match("/[!=<>]/", $field)) {
-                                if ($backtick) {
-                                    $this->having .= " $and_or `$field` '" . $this->escape($field_value) ."'";
-                                } else {
-                                    $this->having .= " $and_or $field '" . $this->escape($field_value) ."'";
-                                }
-                            //operator found in first parameter
-                            } else {
-                                if ($backtick) {
-                                    $this->having .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
-                                } else {
-                                    $this->having .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
-                                }
-                            }
-                        //user included value and operator in first parameter
-                        } else {
-                            $this->having .= " $and_or $field";
-                        }
-                    }
-                }
-                
+                } 
             //user manually wrote entire HAVING portion in first parameter, so set having exactly to user's input
             } else {
-                $where_or_having == "WHERE" ? $this->where = $field : $this->having = $field;
+                $this->where_having[$where_or_having] = $field;
             }
         }
         return $this;
@@ -416,13 +363,13 @@ class Database {
     public function get($table_name = "") {
         if ($table_name != "")
             $this->from($table_name);
-        $query = "$this->select FROM $this->from $this->join $this->where $this->group_by $this->having $this->order_by $this->limit";
+        $query = "$this->select FROM $this->from $this->join ".$this->where_having['WHERE']." $this->group_by ".$this->where_having['HAVING']." $this->order_by $this->limit";
         $this->select = "SELECT *";
         $this->from = "";
         $this->join = "";
-        $this->where = "";
+        $this->where_having['WHERE'] = "";
         $this->group_by = "";
-        $this->having = "";
+        $this->where_having['HAVING'] = "";
         $this->order_by = "";
         $this->limit = "";
         return $this->query(trim($query));
