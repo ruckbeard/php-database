@@ -9,7 +9,7 @@
 $query = $db->query("SELECT * FROM table");</pre>
 
 <h4><strong>get</strong></h4>
-<p>The get function has three paremeters. The first parameter is the table to put in the FROM portion of the query. The second is the number of rows to limit the query by. The third is the offset of LIMIT portion. The get function can also be used run queries constructed by the query constructor functions as can be seen abover in the third example.</p>
+<p>The get function accepts one optional parameter which is the table to put in the FROM portion of the query. When this is set, and no query constructor functions are called before it, it runs a basic query that selects all rows in the table. The get function can also be used run queries constructed by the query constructor functions as can be seen in the third example.</p>
 <pre>$db = new Database;
 
 $query = $db->get("table");</pre>
@@ -17,14 +17,9 @@ $query = $db->get("table");</pre>
 
 <pre>$db = new Database;
 
-$query = $db->get("table", 10, 0);</pre>
-<em>This will create a query "SELECT * FROM table LIMIT 0, 10" and run it on the database</em>
-
-<pre>$db = new Database;
-
-$db->from("table");
+$db->select("*")->from("table")->where("id","5","=");
 $query = $db->get();</pre>
-<em>This will create a query "SELECT * FROM table" and run it on the database</em>
+<em>This will create a query "SELECT * FROM table WHERE id = 5" and run it on the database</em>
 
 <h3><strong>The Query Result</strong></h3>
 <p>The query result object contains the results of the query that was run on the database. It is accessed as an object</p>
@@ -193,7 +188,7 @@ $db->where("id", "1");
 $db->where("name", "bob");
 $query = $db->get();</pre>
 <em>This will create and run the query string  "SELECT * FROM table WHERE id = '1' AND name = 'bob'".</em>
-<h4><strong>where_or</strong></h4>
+<h4><strong>or_where</strong></h4>
 <p>The where_or function will write the WHERE portion of the query string. The function accepts three parameters. The first parameter can be written three different ways. It can be just the field, or the field and an operator. It can also be the field, operator, and data to find in the field. The second parameter is optional and should be set if the first parameter is set as just the field with optional operator. The second parameter is the data to search the field for. The third option can be set the operator if it hasn't been set in the first parameter. The default of the third parameter is "=". The first parameter can also be an array to chain with OR. The function can also be called multiple times to chain with OR.</p>
 <pre>$db = new Database;
 
@@ -265,7 +260,7 @@ $db->having("id", "1");
 $db->having("name", "bob");
 $query = $db->get();</pre>
 <em>This will create and run the query string  "SELECT * FROM table HAVING id = '1' AND name = 'bob'".</em>
-<h4><strong>having_or</strong></h4>
+<h4><strong>or_having</strong></h4>
 <p>The having_or function will write the HAVING portion of the query string. The function accepts three parameters. The first parameter can be written three different ways. It can be just the field, or the field and an operator. It can also be the field, operator, and data to find in the field. The second parameter is optional and should be set if the first parameter is set as just the field with optional operator. The second parameter is the data to search the field for. The third option can be set the operator if it hasn't been set in the first parameter. The default of the third parameter is "=". The first parameter can also be an array to chain with OR. The function can also be called multiple times to chain with OR.</p>
 <pre>$db = new Database;
 
