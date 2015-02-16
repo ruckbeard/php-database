@@ -86,7 +86,14 @@ class Database {
      * @return object Return this object                                                                                               
      */
     private function select_x($x, $select, $var) {
-        $this->query_string["SELECT"] = $select;
+        if (strstr($select, "SELECT") == false) {
+            if ($var != "")
+                $this->query_string["SELECT"] = "$x(".$select.") as " . $var;
+            else
+                $this->query_string["SELECT"] = "$x(".$select.")";
+        } else {
+            $this->query_string["SELECT"] = $select;   
+        }
         return $this;
     }
     
