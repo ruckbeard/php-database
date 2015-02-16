@@ -73,11 +73,7 @@ class Database {
      * @return object Return this object                                                                  
      */
     public function select($select) {
-        if (strstr($select, "SELECT") == false) {
-            $this->query_string["SELECT"] = "SELECT " . $select;
-        } else {
-            $this->query_string["SELECT"] = $select;
-        }
+        $this->query_string["SELECT"] = $select;
         return $this;
     }
     
@@ -90,11 +86,7 @@ class Database {
      * @return object Return this object                                                                                               
      */
     private function select_x($x, $select, $var) {
-        if (strstr($select, "SELECT") == false) {
-            $this->query_string["SELECT"] = "SELECT $x(" . $select . ") as " . $var == "" ? $select : $var;
-        } else {
-            $this->query_string["SELECT"] = $select;
-        }
+        $this->query_string["SELECT"] = $select;
         return $this;
     }
     
@@ -133,7 +125,7 @@ class Database {
      * @return object Return database object
      */
     public function join($join, $join_colums, $param = "") {
-        if (strstr($param == "" ? $param . $this->query_string["JOIN"] : strtoupper($param) . " " . $this->query_string["JOIN"], $param == "" ? $param . "JOIN" : strtoupper($param) . " "  . "JOIN") == false) {
+        if (strstr($param == "" ? $param . $this->query_string["JOIN"] : strtoupper($param) . " " . $this->query_string["JOIN"], $param == "" ? $param . "JOIN" : strtoupper($param) . " "  . "JOIN") == false)         {
             if (strstr($param == "" ? $param . $join : strtoupper($param) . " " . $join, $param == "" ? $param . "JOIN" : strtoupper($param) . " "  . "JOIN") == false) {
                 $this->query_string["JOIN"] = $param == "" ? $param . "JOIN " . $join . " ON " . $join_colums : strtoupper($param) . " " . "JOIN " . $join . " ON " . $join_colums;
             } else {
@@ -180,65 +172,57 @@ class Database {
                 }
             }
             //check if function has been called at least once before. If it was, chain together with AND.
-            if (strstr($this->query_string[$where_or_having], "$where_or_having") == false)
-                $this->query_string[$where_or_having] = "$where_or_having " . implode(" $and_or ", $keys_and_values);
+            if ($this->query_string[$where_or_having] == "")
+                $this->query_string[$where_or_having] = implode(" $and_or ", $keys_and_values);
             else
                 $this->query_string[$where_or_having] .= implode(" $and_or ", $keys_and_values);
             
         } else if (is_string($field)) {
-            //Check if user manually wrote the entire HAVING portion in the first parameter
-            if (strstr($field, $where_or_having) == false) {
-                if ($where_or_having == "$where_or_having") {
-                    //Check if function has already been called. If it has, chain together with OR
-                    if (strstr($this->query_string[$where_or_having], "$where_or_having") == false) {
-                        if ($field_value != "") {
-                            //Check if user included operator in first parameter
-                            if (preg_match("/[!=<>]/", $field)) {
-                                if ($backtick) {
-                                    $this->query_string[$where_or_having] = "$where_or_having `$field` '" . $this->escape($field_value) ."'";
-                                } else {
-                                    $this->query_string[$where_or_having] = "$where_or_having $field '" . $this->escape($field_value) ."'";
-                                }
-                            //operator not found in first parameter
-                            } else {
-                                if ($backtick == true) {
-                                    $this->query_string[$where_or_having] = "$where_or_having `$field` $operator '" . $this->escape($field_value) ."'";
-                                } else {
-                                    $this->query_string[$where_or_having] = "$where_or_having $field $operator '" . $this->escape($field_value) ."'";
-                                }
-                            }
-                        //user included value and operator in first paremeter
+            //Check if function has already been called. If it has, chain together with AND/OR
+            if ($this->query_string[$where_or_having] == "") {
+                if ($field_value != "") {
+                    //Check if user included operator in first parameter
+                    if (preg_match("/[!=<>]/", $field)) {
+                        if ($backtick) {
+                            $this->query_string[$where_or_having] = "`$field` '" . $this->escape($field_value) ."'";
                         } else {
-                            $this->query_string[$where_or_having] = "$where_or_having $field";
+                            $this->query_string[$where_or_having] = "$field '" . $this->escape($field_value) ."'";
                         }
-                    //function has been called at least once before
+                    //operator not found in first parameter
                     } else {
-                        if ($field_value != "") {
-                            //check if user included operator in first parameter
-                            if (preg_match("/[!=<>]/", $field)) {
-                                if ($backtick) {
-                                    $this->query_string[$where_or_having] .= " $and_or `$field` '" . $this->escape($field_value) ."'";
-                                } else {
-                                    $this->query_string[$where_or_having] .= " $and_or $field '" . $this->escape($field_value) ."'";
-                                }
-                            //operator found in first parameter
-                            } else {
-                                if ($backtick) {
-                                    $this->query_string[$where_or_having] .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
-                                } else {
-                                    $this->query_string[$where_or_having] .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
-                                }
-                            }
-                        //user included value and operator in first parameter
+                        if ($backtick == true) {
+                            $this->query_string[$where_or_having] = "`$field` $operator '" . $this->escape($field_value) ."'";
                         } else {
-                            $this->query_string[$where_or_having] .= " $and_or $field";
+                            $this->query_string[$where_or_having] = "$field $operator '" . $this->escape($field_value) ."'";
                         }
                     }
-                } 
-            //user manually wrote entire HAVING portion in first parameter, so set having exactly to user's input
+                //user included value and operator in first paremeter
+                } else {
+                    $this->query_string[$where_or_having] = "$field";
+                }
+            //function has been called at least once before
             } else {
-                $this->query_string[$where_or_having] = $field;
-            }
+                if ($field_value != "") {
+                    //check if user included operator in first parameter
+                    if (preg_match("/[!=<>]/", $field)) {
+                        if ($backtick) {
+                            $this->query_string[$where_or_having] .= " $and_or `$field` '" . $this->escape($field_value) ."'";
+                        } else {
+                            $this->query_string[$where_or_having] .= " $and_or $field '" . $this->escape($field_value) ."'";
+                        }
+                    //operator found in first parameter
+                    } else {
+                        if ($backtick) {
+                            $this->query_string[$where_or_having] .= " $and_or `$field` $operator '" . $this->escape($field_value) ."'";
+                        } else {
+                            $this->query_string[$where_or_having] .= " $and_or $field $operator '" . $this->escape($field_value) ."'";
+                        }
+                    }
+                //user included value and operator in first parameter
+                } else {
+                    $this->query_string[$where_or_having] .= " $and_or $field";
+                }
+            } 
         }
         return $this;
     }
@@ -270,13 +254,12 @@ class Database {
      */
     public function group_by($group_by) {
         if (is_array($group_by)) {
-            $this->query_string["GROUP BY"] = "GROUP BY " . implode(", ", $group_by);
+            $this->query_string["GROUP BY"] = implode(", ", $group_by);
         } else if (is_string($group_by)) {
-            if (strstr($group_by, "GROUP BY") == false) {
-                $this->query_string["GROUP BY"] = "GROUP BY " . $group_by;
-            } else {
+            if ($this->query_string["GROUP BY"] == "")
                 $this->query_string["GROUP BY"] = $group_by;
-            }
+            else
+                $this->query_string["GROUP BY"] .= ", " . $group_by;
         }
         return $this;
     }
@@ -321,15 +304,15 @@ class Database {
      * @param  string $order    The modifier to order by
      * @return object Returns this database object
      */
-    public function order_by($order_by, $order) {
-        if (strstr($this->query_string["ORDER BY"], "ORDER BY") == false) {
-            if (strstr($order_by, "ORDER BY") == false) {
-                $this->query_string["ORDER BY"] = "ORDER BY " . $order_by . " " . strtoupper($order);
+    public function order_by($order_by, $order = "") {
+        if ($this->query_string["ORDER BY"] == "") {
+            if ($order != "") {
+                $this->query_string["ORDER BY"] = $order_by . " " . strtoupper($order);
             } else {
                 $this->query_string["ORDER BY"] = $order_by;
             }
         } else {
-            if (strstr($order_by, "ORDER BY") == false) {
+            if ($order != "") {
                 $this->query_string["ORDER BY"] .= ", " . $order_by . " " . strtoupper($order);
             } else {
                 $this->query_string["ORDER BY"] .= ", " . $order_by;
@@ -346,7 +329,7 @@ class Database {
      */
     public function limit($limit, $offset = -1) {
         if (strstr($limit, "LIMIT") == false) {
-            $this->query_string["LIMIT"] = "LIMIT " . $offset != -1 ? $offset . ", " . $limit : $limit;
+            $this->query_string["LIMIT"] = $offset != -1 ? $offset . ", " . $limit : $limit;
         } else {
             $this->query_string["LIMIT"] = $limit;
         }
@@ -362,14 +345,15 @@ class Database {
     public function get($table_name = "") {
         if ($table_name != "")
             $this->from($table_name);
-        $query = $this->query_string['SELECT'] . " FROM " . 
-                 $this->query_string['FROM'] . " " . 
-                 $this->query_string['JOIN'] . " " . 
-                 $this->query_string['WHERE'] . " " .
-                 $this->query_string['GROUP BY'] . " " . 
-                 $this->query_string['HAVING'] . " " . 
-                 $this->query_string['ORDER BY'] . " " . 
-                 $this->query_string['LIMIT'];
+        $query = "";
+        foreach ($this->query_string as $key => $value) {
+            if ($value != "") {
+                if (strstr($value, $key) == false)
+                    $query .= $key . " " . $value . " ";
+                else
+                    $query .= $value . " ";
+            }
+        }
         $this->query_string = array(
             "SELECT" => "SELECT *",
             "FROM" => "",
