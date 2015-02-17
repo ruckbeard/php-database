@@ -20,8 +20,7 @@ class Database {
         "LIMIT" => ""
     );
     
-    private $set_insert = "";
-    private $set_update = "";
+    private $set = array();
     private $insert = "";
     
     public function __construct() {
@@ -61,8 +60,11 @@ class Database {
         $result = $this->link->query($query) or die($this->link->error.__LINE__);
         $this->last_query = $query;
         
-        if ($result->num_rows > 0) {
-            return $query = new Query($result);
+        if ($result) {
+            if (is_object($result) && $result->num_rows > 0)
+                return $query = new Query($result);
+            else
+                return $result;
         } else {
             return false;
         }
@@ -73,7 +75,7 @@ class Database {
      * @param string $select Can be the full SELECT portion, or just the fields
      * @return object Return this object                                                                  
      */
-    public function select($select) {
+    public function select($select = "*") {
         $this->query_string["SELECT"] = $select;
         
         return $this;
@@ -308,6 +310,12 @@ class Database {
             }
         }
         
+        $this->_reset_query_string();
+        
+        return $this->query(trim($query));
+    }
+    
+    private function _reset_query_string() {
         $this->query_string = array(
             "SELECT" => "SELECT *",
             "FROM" => "",
@@ -318,8 +326,6 @@ class Database {
             "ORDER BY" => "",
             "LIMIT" => ""
         );
-        
-        return $this->query(trim($query));
     }
     
     /**
@@ -330,61 +336,18 @@ class Database {
      * @return object Returns this database object
      */
     public function set($data, $value = "", $escape=true) {
-        if (!is_object($data) && is_array($data[0])) {
-            $keys = array();
-            $values = "('";
+        if (!is_array($data) && !is_object($data))
+            $data = array($data => $value);
+        
+        if (is_array($data) || is_object($data)) {
             foreach ($data as $key => $value) {
-                foreach ($value as $key_2 => $value_2) {
-                    if (!array_search($key_2, $keys,true))
-                        $keys[] = $key_2;
-                    $values .= $this->escape($value_2) . "','";
-                }
-                $values = substr($values, 0, strrpos($values, ","));
-                $values .= "),(";
-            }
-            $keys = array_unique($keys);
-            $values = substr($values, 0, strrpos($values, ","));
-            $this->set_insert = "(".implode(",",$keys).") VALUES $values";
-        } else if (is_array($data) || is_object($data)) {
-            $keys = array();
-            $values = array();
-            $update = "";
-            foreach ($data as $key => $value) {
-                $keys[] = $key;
-                $values[] = $this->escape($value);
-                $update .= "$key = '$value',";
-            }
-            $update = substr($update, 0, strrpos($update, ","));
-            $this->set_insert = "(".implode(",",$keys).") VALUES ('".implode("','",$values)."')";
-            $this->set_update = "SET $update";
-        } else if (is_string($data)) {
-            if ($this->set_insert == "") {
                 if ($escape == true)
-                    $this->set_insert = "($data) VALUES ('".$this->escape($value)."')";
-                else
-                    $this->set_insert = "($data) VALUES ('$value')";
-            } else {
-                $before = substr($this->set_insert, 0, strpos($this->set_insert,')'));
-                $after = substr($this->set_insert, strpos($this->set_insert,')'), strrpos($this->set_insert,')') + 1);
-                $this->set_insert = $before . ",$data" . $after;
-                $this->set_insert = substr($this->set_insert, 0, strrpos($this->set_insert, ")"));
-                if ($escape == true)
-                    $this->set_insert .= ",'" .$this->escape($value) ."')";
-                else
-                    $this->set_insert .= ",'$value')";
-            }
-            if ($this->set_update == "") {
-                if ($escape == true)
-                    $this->set_update = "SET $data = '".$this->escape($value)."'";
-                else
-                    $this->set_update = "SET $data = '$value'";
-            } else {
-                if ($escape == true)
-                    $this->set_update .= ", $data = '".$this->escape($value)."'";
-                else
-                    $this->set_update .= ", $data = '$value'";
+                    $value = $this->escape($value);
+                
+                $this->set[$key] = $value;
             }
         }
+        
         return $this;
     }
     
@@ -393,14 +356,19 @@ class Database {
      * @param string $table The table to insert data into
      * @param array||object Data to insert into the table                                              
      */
-    public function insert($table, $data = "") {
+    public function insert($table = "", $data = "") {
+        if ($table != "")
+            $this->from($table);
+        
         if ($data != "")
-            $this->set($data);
-        $query = "INSERT INTO $table $this->set_insert";
-        $insert_row = $this->link->query($query) or die($this->link->error.__LINE__);
-        $this->last_query = $query;
-        $this->set_insert = "";
-        $this->set_update = "";
+            $this->set($data);        
+        
+        $query = "INSERT INTO ". $this->query_string['FROM'] ." (".implode(",",array_keys($this->set)).") VALUES ('".implode("','",$this->set)."')";
+        $insert_row = $this->query(trim($query));
+        
+        $this->set = array();
+        $this->_reset_query_string();
+        
         if ($insert_row) {
             header("Location: index.php?msg=" . urlencode('Record Added'));
             exit();
@@ -415,16 +383,28 @@ class Database {
      * @param array||object [$data = ""]  The data to update in the table
      * @param string [$where = ""] Where to update the data
      */
-    public function update($table, $data = "", $where = "") {
+    public function update($table = "", $data = "", $where = "") {
+        if ($table != "")
+            $this->from($table);
+        
         if ($data != "")
             $this->set($data);
+        
         if ($where != "")
             $this->where($where);
-        $query = trim("UPDATE $table $this->set_update $this->where");
-        $update_row = $this->link->query($query) or die($this->link->error.__LINE__);
-        $this->last_query = $query;
-        $this->set_insert = "";
-        $this->set_update = "";
+        
+        $update = "SET ";
+        foreach ($this->set as $key => $value) {
+            $update .=  "$key = '$value',";
+        }
+        $update = substr($update, 0, strrpos($update, ","));
+        
+        $query = trim("UPDATE ". $this->query_string['FROM'] ." $update WHERE ". $this->query_string['WHERE']);
+        $update_row = $this->query($query);
+        
+        $this->set = array();
+        $this->_reset_query_string();
+        
         if ($update_row) {
             header("Location: index.php?msg=" . urlencode('Record Updated'));
             exit();
@@ -439,39 +419,31 @@ class Database {
      * @param string [$where = ""] Where the row is to delete
      */
     public function delete($table = "", $where = "") {
-        if (!is_array($table)) {
-            if ($table != "")
-                $this->from($table);
-            if ($where != "")
-                $this->where($where);
-            $query = "DELETE FROM $this->from $this->where";
-            $delete_row = $this->link->query(trim($query)) or die($this->link->error.__LINE__);
-            $this->last_query = $query;
-            $this->from = "";
-            $this->where = "";
-            if ($delete_row) {
-                header("Location: index.php?msg=" . urlencode('Record Deleted'));
-            } else {
-                die('Error: (' . $this->link->errorno . ') ' . $this->link->error);
+        if (is_array($table)) {
+            foreach ($table as $single) {
+                $this->delete($single, $where);
             }
-        } else if (is_array($table)) {
-            $query = "";
-            if ($where != "")
-                $this->where($where);
-            foreach ($table as $key => $value) {
-                $this->from($value);
-                $query .= "DELETE FROM $this->from $this->where;";
-            }
-            $query = substr($query, 0, strrpos($query, ";"));
-            $delete_row = $this->link->multi_query(trim($query)) or die($this->link->error.__LINE__);
-            $this->last_query = $query;
-            $this->from = "";
-            $this->where = "";
-            if ($delete_row) {
-                header("Location: index.php?msg=" . urlencode('Record Deleted'));
-            } else {
-                die('Error: (' . $this->link->errorno . ') ' . $this->link->error);
-            }
+            
+            $this->_reset_query_string();
+            
+            return;
+        }
+        
+        if ($table != "")
+            $this->from($table);
+        
+        if ($where != "")
+            $this->where($where);
+        
+        $query = "DELETE FROM " . $this->query_string['FROM'] . " WHERE " . $this->query_string['WHERE'];
+        $delete_row = $this->query(trim($query));
+        
+        $this->_reset_query_string();
+        
+        if ($delete_row) {
+            header("Location: index.php?msg=" . urlencode('Record Deleted'));
+        } else {
+            die('Error: (' . $this->link->errorno . ') ' . $this->link->error);
         }
     }
     
