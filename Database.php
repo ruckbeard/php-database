@@ -399,7 +399,9 @@ class Database {
         }
         $update = substr($update, 0, strrpos($update, ","));
         
-        $query = trim("UPDATE ". $this->query_string['FROM'] ." $update WHERE ". $this->query_string['WHERE']);
+        $where = $this->query_string['WHERE'] == "" ? "" : " WHERE " . $this->query_string['WHERE'];
+        
+        $query = trim("UPDATE " . $this->query_string['FROM'] . " $update" . $where);
         $update_row = $this->query($query);
         
         $this->set = array();
@@ -435,7 +437,9 @@ class Database {
         if ($where != "")
             $this->where($where);
         
-        $query = "DELETE FROM " . $this->query_string['FROM'] . " WHERE " . $this->query_string['WHERE'];
+        $where = $this->query_string['WHERE'] == "" ? "" : " WHERE " . $this->query_string['WHERE'];
+        
+        $query = "DELETE FROM " . $this->query_string['FROM'] . $where;
         $delete_row = $this->query(trim($query));
         
         $this->_reset_query_string();
