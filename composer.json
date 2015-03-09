@@ -1,0 +1,25 @@
+{
+    "name": "ruckbeard/database",
+    "type": "library",
+    "description": "PHP MySQLi Database library",
+    "keywords": [
+        "MySQL",
+        "MySQLi",
+        "Database"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kevin VanderWulp", "email": "kvwulp@gmail.com", "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Thruway": "src"
+        }
+    },
+    "require": {
+        "php": ">=5.4"
+    }
+}
+
