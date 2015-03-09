@@ -2,12 +2,14 @@
 
 namespace Ruckbeard\Database;
 
-class Query {
+class Query 
+{
     public $query;
     public $object = array();
     private $position = 0;
     
-    public function __construct($query) {
+    public function __construct($query) 
+    {
         $this->query = $query;
         $this->position = 0;
     }
@@ -17,7 +19,8 @@ class Query {
      * @param  [[Type]] [$obj = false] [[Description]]
      * @return [[Type]] [[Description]]
      */
-    public function result($obj = false) {
+    public function result($obj = false) 
+    {
         if ((bool)$obj) {
             while ($row = $this->query->fetch_object($obj))
             {
@@ -33,7 +36,8 @@ class Query {
         }
     }
     
-    public function row($pos = 0, $obj = false) {
+    public function row($pos = 0, $obj = false) 
+    {
         if ((bool)$obj) {
             while ($row = $this->query->fetch_object($obj))
             {
@@ -49,7 +53,8 @@ class Query {
         }
     }
     
-    private function hasNext($array) {
+    private function hasNext($array) 
+    {
         if (is_array($array)) {
             if (next($array) === false) {
                 return false;
@@ -61,7 +66,8 @@ class Query {
         }
     }
     
-    private function hasPrev($array) {
+    private function hasPrev($array) 
+    {
         if (is_array($array)) {
             if (prev($array) === false) {
                 return false;
@@ -73,26 +79,30 @@ class Query {
         }
     }
     
-    public function nextRow() {
+    public function nextRow() 
+    {
         if ($this->has_next($this->object)) {
             next($this->object);
         }
         return current($this->object);
     }
     
-    public function prevRow() {
+    public function prevRow() 
+    {
         if ($this->has_prev($this->object)) {
             prev($this->object);
         }
         return current($this->object);
     }
     
-    public function firstRow() {
+    public function firstRow() 
+    {
         reset($this->object);
         return current($this->object);
     }
     
-    public function lastRow() {
+    public function lastRow() 
+    {
         end($this->object);
         return current($this->object);
     }

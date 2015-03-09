@@ -4,14 +4,16 @@ namespace Ruckbeard\Database;
 
 use Ruckbeard\Database\Query;
 
-class Execute extends QueryConstructor {
+abstract class Execute extends QueryConstructor 
+{
     /**
      * @brief Query the database with a with a user constructed query
      * @param string $query A query string. Example "SELECT * FROM table"
      * @return If the query results have more than 0 rows, return a Query object that
      *         contains the results of the query, else return false                                                      
      */
-    public function query($query) {
+    public function query($query) 
+    {
         $result = $this->link->query($query) or die($this->link->error.__LINE__);
         $this->last_query = $query;
         
@@ -35,7 +37,8 @@ class Execute extends QueryConstructor {
      * @param  string [$table_name = ""] The table name to run on the query on, if left empty, it will be taken from the from function
      * @return object Returns a query object created by the query function
      */
-    public function get($table_name = "") {
+    public function get($table_name = "") 
+    {
         if ($table_name != "") {
             $this->from($table_name);
         }
@@ -61,7 +64,8 @@ class Execute extends QueryConstructor {
      * @param string $table The table to insert data into
      * @param array||object Data to insert into the table                                              
      */
-    public function insert($table = "", $data = "") {
+    public function insert($table = "", $data = "") 
+    {
         if ($table != "") {
             $this->from($table);
         }
@@ -97,7 +101,8 @@ class Execute extends QueryConstructor {
      * @param array||object [$data = ""]  The data to update in the table
      * @param string [$where = ""] Where to update the data
      */
-    public function update($table = "", $data = "", $where = "") {
+    public function update($table = "", $data = "", $where = "") 
+    {
         if ($table != "") {
             $this->from($table);
         }
@@ -137,7 +142,8 @@ class Execute extends QueryConstructor {
      * @param string [$table = ""] The table to delete information from
      * @param string [$where = ""] Where the row is to delete
      */
-    public function delete($table = "", $where = "") {
+    public function delete($table = "", $where = "") 
+    {
         if (is_array($table)) {
             foreach ($table as $single) {
                 $this->delete($single, $where);
