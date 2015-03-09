@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Php-database : A class for PHP that can be used to connect to a MySQL database and run queries. Similar to CodeIgniter&#39;s database class.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Php-database</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/ruckbeard/php-database">View on GitHub</a>
+
+          <h1 id="project_title">Php-database</h1>
+          <h2 id="project_tagline">A class for PHP that can be used to connect to a MySQL database and run queries. Similar to CodeIgniter&#39;s database class.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/ruckbeard/php-database/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/ruckbeard/php-database/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="php-database" class="anchor" href="#php-database" aria-hidden="true"><span class="octicon octicon-link"></span></a>php-database</h1>
+
+<p>A class for PHP that can be used to connect to a MySQL database, construct queries, and run queries. Similar to CodeIgniter's database class.</p>
+
+<h2>
+<a id="install" class="anchor" href="#install" aria-hidden="true"><span class="octicon octicon-link"></span></a>Install</h2>
+
+<p>To install this library, run this command:</p>
+
+<pre>composer require ruckbeard/database dev-master</pre>
+
+<h3>
+<a id="query-functions" class="anchor" href="#query-functions" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>Query Functions</strong>
+</h3>
+
+<h4>
+<a id="query" class="anchor" href="#query" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>query</strong>
+</h4>
+
+<p>This will run a simple query on the database that will return a query object that can be used to obtain the results if it returns any rows.</p>
+
+<pre>$db = new Database;
+
+$query = $db-&gt;query("SELECT * FROM table");</pre>
+
+<h4>
+<a id="get" class="anchor" href="#get" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>get</strong>
+</h4>
+
+<p>The get function accepts one optional parameter which is the table to put in the FROM portion of the query. When this is set, and no query constructor functions are called before it, it runs a basic query that selects all rows in the table. The get function can also be used run queries constructed by the query constructor functions as can be seen in the third example.</p>
+
+<pre>$db = new Database;
+
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create a query "SELECT * FROM table" and run it on the database</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*")-&gt;from("table")-&gt;where("id","5","=");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create a query "SELECT * FROM table WHERE id = 5" and run it on the database</em></p>
+
+<h3>
+<a id="the-query-result" class="anchor" href="#the-query-result" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>The Query Result</strong>
+</h3>
+
+<p>The query result object contains the results of the query that was run on the database. It is accessed as an object</p>
+
+<h4>
+<a id="result" class="anchor" href="#result" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>result</strong>
+</h4>
+
+<p>The result function returns all of the results from the query. All of the results can be accessed by usings a foreach loop.</p>
+
+<pre>$db = new Database;
+
+$query = $db-&gt;query("SELECT * FROM table");
+
+foreach ($query-&gt;result() as $row) {
+  $row-&gt;id;
+  $row-&gt;name;
+  $row-&gt;date;
+}</pre>
+
+<pre>$db = new Database;
+
+$query = $db-&gt;get("table");
+
+foreach ($query-&gt;result() as $row) {
+  $row-&gt;id;
+  $row-&gt;name;
+  $row-&gt;date;
+}</pre>
+
+<h4>
+<a id="row" class="anchor" href="#row" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>row</strong>
+</h4>
+
+<p>The row function returns a single row from the query results. With no parameters, it will return the first row of the results. You can add a parameter to select which row you want to get.</p>;
+<pre>$db = new Database;
+
+$query = $db-&gt;query("SELECT * FROM table");
+$row = $query-&gt;row();
+$row-&gt;id;
+$row-&gt;name;
+$row-&gt;date;</pre>
+<p>or</p>
+
+<pre>$db = new Database;
+
+$query = $db-&gt;query("SELECT * FROM table");
+$row = $query-&gt;row(5);
+$row-&gt;id;
+$row-&gt;name;
+$row-&gt;date;</pre>
+
+<h3>
+<a id="query-constructor-functions" class="anchor" href="#query-constructor-functions" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>Query Constructor Functions</strong>
+</h3>
+
+<p>The query constructor functions are a set of functions that can be called before using the get() function to write seperate portions of the query without having to manually write the query as a string. Information is automatically escaped by using this method. These functions can be chained together which can simplify the syntax and increase readability.</p>
+
+<h4>
+<a id="select" class="anchor" href="#select" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>select</strong>
+</h4>
+
+<p>The select function writes the SELECT portion of the query.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("foo,bar");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT foo,bar FROM table".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("SELECT id");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT id FROM table".</em></p>
+
+<h4>
+<a id="select_max" class="anchor" href="#select_max" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>select_max</strong>
+</h4>
+
+<p>The select max function writes the SELECT MAX(field) portion of the query. Accepts two parameters. The first is the field to select and the second renames the resulting field</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select_max("foo","bar");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT MAX(foo) as bar FROM table".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select_max("foo");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT MAX(foo) as foo FROM table".</em></p>
+
+<h4>
+<a id="select_min" class="anchor" href="#select_min" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>select_min</strong>
+</h4>
+
+<p>The select min function writes the SELECT MIN(field) portion of the query. Accepts two parameters. The first is the field to select and the second renames the resulting field</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select_min("foo","bar");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT MIN(foo) as bar FROM table".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select_min("foo");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT MIN(foo) as foo FROM table".</em></p>
+
+<h4>
+<a id="select_avg" class="anchor" href="#select_avg" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>select_avg</strong>
+</h4>
+
+<p>The select avg function writes the SELECT AVG(field) portion of the query. Accepts two parameters. The first is the field to select and the second renames the resulting field</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select_avg("foo","bar");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT AVG(foo) as bar FROM table".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select_avg("foo");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT AVG(foo) as foo FROM table".</em></p>
+
+<h4>
+<a id="select_sum" class="anchor" href="#select_sum" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>select_sum</strong>
+</h4>
+
+<p>The select sum function writes the SELECT SUM(field) portion of the query. Accepts two parameters. The first is the field to select and the second renames the resulting field</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select_sum("foo","bar");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT SUM(foo) as bar FROM table".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select_sum("foo");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT SUM(foo) as foo FROM table".</em></p>
+
+<h4>
+<a id="from" class="anchor" href="#from" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>from</strong>
+</h4>
+
+<p>The from function will write the FROM portion of the query string.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;from("table");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("foo");
+$db-&gt;from("table");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT foo FROM table".</em></p>
+
+<h4>
+<a id="join" class="anchor" href="#join" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>join</strong>
+</h4>
+
+<p>The join function will write the JOIN portion of the query string. It accepts three parameters. The first parameter is the table to join. The second parameter contains the foreign key to join the queries by. The third parameter is optional. It sets what type of JOIN, such as left, right, or inner.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("table.*, table2.name");
+$db-&gt;join("table2", "table.id = table2.id", "inner");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string  "SELECT table.*, table2.name FROM table INNER JOIN table2 ON table.id = table2.id".</em></p>
+
+<h4>
+<a id="where" class="anchor" href="#where" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>where</strong>
+</h4>
+
+<p>The where function will write the WHERE portion of the query string. The function accepts three parameters. The first parameter can be written three different ways. It can be just the field, or the field and an operator. It can also be the field, operator, and data to find in the field. The second parameter is optional and should be set if the first parameter is set as just the field with optional operator. The second parameter is the data to search the field for. The third option can be set the operator if it hasn't been set in the first parameter. The default of the third parameter is "=". The first parameter can also be an array to chain with AND. The function can also be called multiple times to chain with AND.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;where("id = 1");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table WHERE id = '1'".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;where("id =", "1");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table WHERE id = '1'".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;where("id", "1");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table WHERE id = '1'".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;where("id","1","=");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table WHERE id = '1'".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;where("id", "1");
+$db-&gt;where("name", "bob");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table WHERE id = '1' AND name = 'bob'".</em></p>
+
+<h4>
+<a id="or_where" class="anchor" href="#or_where" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>or_where</strong>
+</h4>
+
+<p>The where_or function will write the WHERE portion of the query string. The function accepts three parameters. The first parameter can be written three different ways. It can be just the field, or the field and an operator. It can also be the field, operator, and data to find in the field. The second parameter is optional and should be set if the first parameter is set as just the field with optional operator. The second parameter is the data to search the field for. The third option can be set the operator if it hasn't been set in the first parameter. The default of the third parameter is "=". The first parameter can also be an array to chain with OR. The function can also be called multiple times to chain with OR.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;where("id", "1");
+$db-&gt;where("name", "bob");
+$db-&gt;where_or("name", "ted");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table WHERE id = '1' AND name = 'bob' OR name = 'ted'".</em></p>
+
+<h4>
+<a id="group_by" class="anchor" href="#group_by" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>group_by</strong>
+</h4>
+
+<p>The group_by function will write the GROUP BY portion of the query string. The function accepts one parameter which can be a string of values to group by, or an array of multiple values.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;group_by("title, date");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string "SELECT * FROM table GROUP BY title, date"</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;group_by(array("title","date"));
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string "SELECT * FROM table GROUP BY title, date"</em></p>
+
+<h4>
+<a id="distinct" class="anchor" href="#distinct" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>distinct</strong>
+</h4>
+
+<p>The distinct function will allow you to add DISTINCT to the SELECT portion of the query string.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;distinct();
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string "SELECT DISTINCT * FROM table"</em></p>
+
+<h4>
+<a id="having" class="anchor" href="#having" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>having</strong>
+</h4>
+
+<p>The having function will write the HAVING portion of the query string. The function accepts three parameters. The first parameter can be written three different ways. It can be just the field, or the field and an operator. It can also be the field, operator, and data to find in the field. The second parameter is optional and should be set if the first parameter is set as just the field with optional operator. The second parameter is the data to search the field for. The third option can be set the operator if it hasn't been set in the first parameter. The default of the third parameter is "=". The first parameter can also be an array to chain with AND. The function can also be called multiple times to chain with AND.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;having("id = 1");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table HAVING id = '1'".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;having("id =", "1");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table HAVING id = '1'".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;having("id", "1");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table HAVING id = '1'".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;having("id","1","=");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table HAVING id = '1'".</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;having("id", "1");
+$db-&gt;having("name", "bob");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table HAVING id = '1' AND name = 'bob'".</em></p>
+
+<h4>
+<a id="or_having" class="anchor" href="#or_having" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>or_having</strong>
+</h4>
+
+<p>The having_or function will write the HAVING portion of the query string. The function accepts three parameters. The first parameter can be written three different ways. It can be just the field, or the field and an operator. It can also be the field, operator, and data to find in the field. The second parameter is optional and should be set if the first parameter is set as just the field with optional operator. The second parameter is the data to search the field for. The third option can be set the operator if it hasn't been set in the first parameter. The default of the third parameter is "=". The first parameter can also be an array to chain with OR. The function can also be called multiple times to chain with OR.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*");
+$db-&gt;from("table");
+$db-&gt;having("id", "1");
+$db-&gt;having("name", "bob");
+$db-&gt;having_or("name", "ted");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string  "SELECT * FROM table HAVING id = '1' AND name = 'bob' OR name = 'ted'".</em></p>
+
+<h4>
+<a id="order_by" class="anchor" href="#order_by" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>order_by</strong>
+</h4>
+
+<p>The order_by function will allow you to write the ORDER BY portion of the query. This function accepts two parameters. The first is the field to order by. The second is the direction of the result, which are asc, desc, or random. The function can be called multiple times for multiple fields.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;order_by("id","desc");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string "SELECT * FROM table ORDER BY id DESC"</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;order_by("id","desc");
+$db-&gt;order_by("name","asc");
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string "SELECT * FROM table ORDER BY id DESC, name ASC"</em></p>
+
+<h4>
+<a id="limit" class="anchor" href="#limit" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>limit</strong>
+</h4>
+
+<p>The limit function will allow you to write the LIMIT portion of the query. This function accepts two parameters. The first is amount to limit the query by. The second is an optional offset.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;limit(10);
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string "SELECT * FROM table LIMIT 10"</em></p>
+
+<pre>$db = new Database;
+
+$db-&gt;limit(10,20);
+$query = $db-&gt;get("table");</pre>
+
+<p><em>This will create and run the query string "SELECT * FROM table LIMIT 20, 10"</em></p>
+
+<h4>
+<a id="chaining-constructor-functions" class="anchor" href="#chaining-constructor-functions" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>Chaining Constructor Functions</strong>
+</h4>
+
+<p>The query constructor functions can be chained together to simplify the syntax and increase readability.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;select("*")-&gt;from("table")-&gt;where("id","1","!=")-&gt;order_by("id","asc");
+$query = $db-&gt;get();</pre>
+
+<p><em>This will create and run the query string "SELECT * FROM table WHERE id != 1 ORDER BY id ASC"</em></p>
+
+<h3>
+<a id="insert" class="anchor" href="#insert" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>Insert</strong>
+</h3>
+
+<p>The insert function can be used to create and run insert queries. The first parameter it accepts in the table and the second is the data to insert into the query string. The data can be stored in an array or an object. The second parameter is optional. The data can be set by using the set() function.</p>
+
+<pre>$db = new Database;
+
+$data = array(
+  field_1 =&gt; "foo",
+  field_2 =&gt; "bar",
+  field_3 =&gt; "foobar"
+)
+
+$db-&gt;insert("table",$data);</pre>
+
+<p><em>This will create and run the query "INSERT INTO table (field_1,field_2,field_3) VALUES ('foo','bar','foobar')</em></p>
+
+<pre>$db = new Database;
+
+$data = array(
+  array (
+    field_1 =&gt; "foo1",
+    field_2 =&gt; "bar2",
+    field_3 =&gt; "foobar3"
+  ),
+  array (
+    field_1 =&gt; "foo4",
+    field_2 =&gt; "bar5",
+    field_3 =&gt; "foobar6"
+  )
+)
+
+$db-&gt;insert("table",$data);</pre>
+
+<p><em>This will create and run the query "INSERT INTO table (field_1,field_2,field_3) VALUES ('foo1','bar2','foobar3'),('foo4','bar5','foobar6')</em></p>
+
+<h3>
+<a id="update" class="anchor" href="#update" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>Update</strong>
+</h3>
+
+<p>The update function will create and run an UPDATE query. The first paremeter is the table. The second parameter is the data to enter into the query string. The third parameter writes the WHERE portion of the query string. The second and third parameters are optional. The data can be set by using the set() function and the WHERE portion can be set by using the where() function.</p>
+
+<pre>$data = array(
+  field_1 =&gt; "foo",
+  field_2 =&gt; "bar",
+  field_3 =&gt; "foobar"
+)
+
+$db-&gt;update("table",$data,"id = 1");</pre>
+
+<p><em>This will create and run the query string "UPDATE table SET field_1 = 'foo', field_2 = 'bar', field_3 = 'foobar' WHERE id = 1"</em></p>
+
+<pre>$data = array(
+  field_1 =&gt; "foo",
+  field_2 =&gt; "bar",
+  field_3 =&gt; "foobar"
+)
+
+$db-&gt;where("id","1");
+$db-&gt;update("table",$data);</pre>
+
+<p><em>This will create and run the query string "UPDATE table SET field_1 = 'foo', field_2 = 'bar', field_3 = 'foobar' WHERE id = 1"</em></p>
+
+<h3>
+<a id="set" class="anchor" href="#set" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>Set</strong>
+</h3>
+
+<p>The set function can be used to set the data of an INSERT or UPDATE query string. It can be called multiple times to set multiple fields with data.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;set("field_1", "foo");
+$db-&gt;set("field_2", "bar");
+$db-&gt;set("field_3", "foobar");
+$db-&gt;insert("table");</pre>
+
+<pre>$db = new Database;
+
+$db-&gt;set("field_1", "foo");
+$db-&gt;set("field_2", "bar");
+$db-&gt;set("field_3", "foobar");
+$db-&gt;where("id","1");
+$db-&gt;update("table");</pre>
+
+<h3>
+<a id="delete" class="anchor" href="#delete" aria-hidden="true"><span class="octicon octicon-link"></span></a><strong>Delete</strong>
+</h3>
+
+<p>The delete function can be called to create and run a DELETE query string. The first and second parameters are optional. The first parameter is the table to delete from and the second parameter writes the WHERE portion of the query string. These can also be set by using the from() and where() functions.</p>
+
+<pre>$db = new Database;
+
+$db-&gt;from("table")-&gt;where("id","1");
+$db-&gt;delete();</pre>
+
+<p>or</p>
+
+<pre>$db = new Database;
+
+$db-&gt;delete("table", "id = 1");</pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Php-database maintained by <a href="https://github.com/ruckbeard">ruckbeard</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
