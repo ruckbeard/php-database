@@ -2,7 +2,7 @@
 
 namespace Ruckbeard\Database;
 
-class QueryConstructor 
+abstract class QueryConstructor 
 {
     protected $last_query = "";
     protected $query_string = array(
