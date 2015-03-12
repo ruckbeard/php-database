@@ -2,7 +2,7 @@
 
 namespace Ruckbeard\Database;
 
-class Query 
+class Result 
 {
     public $query;
     public $object = array();
