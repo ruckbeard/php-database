@@ -25,7 +25,7 @@ class Database extends Execute
 	 */
 	private function connect() 
     {
-        $this->link = mysqli_connect($this->host, $this->username, $this->password, $this->db_name);
+        $this->link = new mysqli($this->host, $this->username, $this->password, $this->db_name);
 		
 		if (!$this->link) {
 			$this->error = "Connection Failed: " . $this->link->connect_error;
