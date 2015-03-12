@@ -1,8 +1,6 @@
 <?php
 namespace Ruckbeard\Database;
 
-use Mysqli;
-
 class Database extends Execute
 {
     //Constants muse be defined by the user for this to work, preferably in a seperate file
@@ -27,7 +25,7 @@ class Database extends Execute
 	 */
 	private function connect() 
     {
-        $this->link = new Mysqli($this->host, $this->username, $this->password, $this->db_name);
+        $this->link = new \mysqli($this->host, $this->username, $this->password, $this->db_name);
 		
 		if (!$this->link) {
 			$this->error = "Connection Failed: " . $this->link->connect_error;
