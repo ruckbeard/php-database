@@ -2,7 +2,7 @@
 
 namespace Ruckbeard\Database;
 
-use Ruckbeard\Database\Query;
+use Ruckbeard\Database\Result;
 
 abstract class Execute extends QueryConstructor 
 {
@@ -19,14 +19,13 @@ abstract class Execute extends QueryConstructor
         
         if ($result) {
             if (is_object($result) && $result->num_rows > 0) {
-                return $query = new Query($result);
+                return $query = new Result($result);
             } else {
                 return $result;
             }
         } else {
             return false;
         }
-        echo $query;
     }
     
     
@@ -82,17 +81,7 @@ abstract class Execute extends QueryConstructor
         $this->set = array();
         $this->resetQueryString();
         
-        if ($insert_row) {
-            $data = array("status" => "1");
-            header("Content-Type: application/json");
-            echo json_encode($data);
-            exit();
-        } else {
-            $data = array("status" => "0", "msg" => "Error: ($this->link->errorno) $this->link->error");
-            header("Content-Type: application/json");
-            echo json_encode($data);
-            exit();
-        }
+        return $insert_row;
     }
     
     /**
@@ -128,13 +117,8 @@ abstract class Execute extends QueryConstructor
         
         $this->set = array();
         $this->resetQueryString();
-        
-        if ($update_row) {
-            header("Location: index.php?msg=" . urlencode('Record Updated'));
-            exit();
-        } else {
-            die('Error: (' . $this->link->errorno . ') ' . $this->link->error);
-        }
+
+        return $update_row;
     }
     
     /**
@@ -169,10 +153,6 @@ abstract class Execute extends QueryConstructor
         
         $this->resetQueryString();
         
-        if ($delete_row) {
-            header("Location: index.php?msg=" . urlencode('Record Deleted'));
-        } else {
-            die('Error: (' . $this->link->errorno . ') ' . $this->link->error);
-        }
+        return $delete_row;
     }
 }
